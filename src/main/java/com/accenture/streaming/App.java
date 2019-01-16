@@ -100,9 +100,9 @@ public class App {
 		StreamingQuery query2 =joinedData.writeStream()
 		  .outputMode("append")
 		  .format("org.elasticsearch.spark.sql")
-		  .option("es.mapping.id", "id")
+		//  .option("es.mapping.id", "id")
 		  .option("checkpointLocation", "path-to-checkpointing")
-		  .start("customer_action/json");
+		  .start("customer_transaction/json");
 		
 		
 		// write to output queue
