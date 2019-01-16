@@ -93,7 +93,7 @@ public class App {
 		// write to output queue
 		StreamingQuery query2 = joinedData
 				.select(col("id").as("key"), 								// uid is our key for Kafka (not ideal!)
-						to_json(struct(col("action")							// build a struct (grouping) and convert to JSON
+						to_json(struct(col("id"), col("action")							// build a struct (grouping) and convert to JSON
 						, col("username"), col("ts")							// ...of our...
 						, col("customeraddress"), col("state"), col("customername")))						// columns
 						.as("value"))														// as value for Kafka
