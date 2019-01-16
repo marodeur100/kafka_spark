@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -15,6 +16,11 @@
 	</properties>
 
 	<dependencies>
+		 <dependency>
+            <groupId>postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>9.1-901-1.jdbc4</version>
+        </dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-sql-kafka-0-10_2.11</artifactId>
@@ -29,6 +35,11 @@
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-reflect</artifactId>
 			<version>2.11.10</version>
+		</dependency>
+		<dependency>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>elasticsearch-rest-client</artifactId>
+			<version>6.2.4</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -93,10 +104,12 @@
 					<mainClass>com.accenture.streaming.App</mainClass>
 					<arguments>
 						<argument>localhost:9092</argument>
-						<argument>subscribe</argument>
 						<argument>test</argument>
-						<argument>C:/temp/openslava-streaming-demo/structured-kafka-streaming/static-data</argument>
+						<argument>target</argument>
 						<argument>local[*]</argument>
+						<argument>jdbc:postgresql://10.0.20.78:5432/airflow</argument>
+						<argument>root</argument>
+						<argument>root</argument>
 					</arguments>
 				</configuration>
 			</plugin>

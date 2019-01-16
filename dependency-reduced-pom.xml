@@ -64,10 +64,11 @@
           <mainClass>com.accenture.streaming.App</mainClass>
           <arguments>
             <argument>localhost:9092</argument>
-            <argument>subscribe</argument>
             <argument>test</argument>
-            <argument>C:/temp/openslava-streaming-demo/structured-kafka-streaming/static-data</argument>
+            <argument>target</argument>
             <argument>local[*]</argument>
+            <argument>10.0.25.78</argument>
+            <argument>3192</argument>
           </arguments>
         </configuration>
       </plugin>
