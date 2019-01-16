@@ -16,11 +16,16 @@
 	</properties>
 
 	<dependencies>
-		 <dependency>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>9.1-901-1.jdbc4</version>
-        </dependency>
+		<dependency>
+			<groupId>org.elasticsearch</groupId>
+			<artifactId>elasticsearch-spark-20_2.11</artifactId>
+			<version>6.2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.1-901-1.jdbc4</version>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-sql-kafka-0-10_2.11</artifactId>
@@ -107,9 +112,11 @@
 						<argument>test</argument>
 						<argument>target</argument>
 						<argument>local[*]</argument>
-						<argument>jdbc:postgresql://localhost:30432/airflow</argument>
+						<argument>jdbc:postgresql://192.168.0.33:30432/airflow</argument>
 						<argument>root</argument>
 						<argument>root</argument>
+						<argument>192.168.0.33</argument>
+						<argument>30192</argument>
 					</arguments>
 				</configuration>
 			</plugin>

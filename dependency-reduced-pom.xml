@@ -70,6 +70,8 @@
             <argument>jdbc:postgresql://192.168.0.33:30432/airflow</argument>
             <argument>root</argument>
             <argument>root</argument>
+            <argument>192.168.0.33</argument>
+            <argument>30192</argument>
           </arguments>
         </configuration>
       </plugin>

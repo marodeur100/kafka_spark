@@ -1,6 +1,9 @@
 package com.accenture.streaming;
 
-import static org.apache.spark.sql.functions.*;
+import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.json_tuple;
+import static org.apache.spark.sql.functions.struct;
+import static org.apache.spark.sql.functions.to_json;
 
 import java.util.Properties;
 
@@ -12,6 +15,7 @@ import org.apache.spark.sql.streaming.OutputMode;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
 import org.apache.spark.sql.streaming.Trigger;
+import org.elasticsearch.hadoop.cfg.ConfigurationOptions;
 
 /**
  * Spark Structured Stream Processing with Apache Kafka <br>
@@ -50,24 +54,28 @@ public class App {
 		// postgres user credentials
 		String postgresUser = args[5];
 		String postgresPassword = args[6];
-		
+		// elastic search
+		String elasticHost = args[7];
+		String elasticPort = args[8];
+
 		String url = postgresUrl;
 		Properties props = new Properties();
-		props.setProperty("user",postgresUser);
-		props.setProperty("password",postgresPassword);
+		props.setProperty("user", postgresUser);
+		props.setProperty("password", postgresPassword);
 
-		
 		// Getting the static CSV data from a directory
 		SparkSession spark = SparkSession.builder().appName("Kafka Streaming Example")
+				.config(ConfigurationOptions.ES_NODES, elasticHost).config(ConfigurationOptions.ES_PORT, elasticPort)
+				.config(ConfigurationOptions.ES_INDEX_AUTO_CREATE, "true")
 				.config(SPARK_MASTER, masterAddress).getOrCreate();
 
+		
 		// mute it down, Spark is superchatty on INFO
 		spark.sparkContext().setLogLevel("WARN");
 
-		
 		// now let's read the customer table
 		Dataset<Row> staticData = spark.read().jdbc(postgresUrl, "customer_nf", props);
-		
+
 		// Definition of the Kafka Stream including the mapping of JSON into Java
 		// Objects
 		Dataset<UserActivity> kafkaEntries = spark.readStream() // read a stream
@@ -89,22 +97,27 @@ public class App {
 				.outputMode(OutputMode.Append()) // only write newly matched stuff
 				.start();
 
+		StreamingQuery query2 =joinedData.writeStream()
+		  .outputMode("append")
+		  .format("org.elasticsearch.spark.sql")
+		  .option("es.mapping.id", "id")
+		  .option("checkpointLocation", "path-to-checkpointing")
+		  .start("customer_action/json");
+		
 		
 		// write to output queue
-		StreamingQuery query2 = joinedData
-				.select(col("id").as("key"), 								// uid is our key for Kafka (not ideal!)
-						to_json(struct(col("id"), col("action")							// build a struct (grouping) and convert to JSON
-						, col("username"), col("ts")							// ...of our...
-						, col("customeraddress"), col("state"), col("customername")))						// columns
-						.as("value"))														// as value for Kafka
-				.writeStream()																// write this key/value as a stream
-				.trigger(Trigger.ProcessingTime(2000))				// every two seconds 
-				.format("kafka")															// to Kafka :-)
-				.option("kafka.bootstrap.servers", bootstrapServers)
-				.option("topic", targetTopic)
-				.option("checkpointLocation", "checkpoint")  // metadata for checkpointing 
-				.start();
-		
+//		StreamingQuery query2 = joinedData.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
+//				to_json(struct(col("id"), col("action") // build a struct (grouping) and convert to JSON
+//						, col("username"), col("ts") // ...of our...
+//						, col("customeraddress"), col("state"), col("customername"))) // columns
+//								.as("value")) // as value for Kafka
+//				.writeStream() // write this key/value as a stream
+//				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
+//				.format("kafka") // to Kafka :-)
+//				.option("kafka.bootstrap.servers", bootstrapServers).option("topic", targetTopic)
+//				.option("checkpointLocation", "checkpoint") // metadata for checkpointing
+//				.start();
+
 		// block main thread until done.
 		query1.awaitTermination();
 		query2.awaitTermination();
