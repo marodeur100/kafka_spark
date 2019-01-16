@@ -12,24 +12,8 @@ public class UserActivity implements Serializable{
 	
 	private String username;
 	private String action;
-	private String uid;
+	private String id;
 	private Timestamp ts;
-	
-	private String customerName;
-	
-	public String getCustomerName() {
-		return customerName;
-	}
-	public void setCustomerName(String customerName) {
-		this.customerName = customerName;
-	}
-	public String getCustomerAddress() {
-		return customerAddress;
-	}
-	public void setCustomerAddress(String customerAddress) {
-		this.customerAddress = customerAddress;
-	}
-	private String customerAddress;
 	
 	public String getUsername() {
 		return username;
@@ -43,11 +27,11 @@ public class UserActivity implements Serializable{
 	public void setAction(String action) {
 		this.action = action;
 	}
-	public String getUid() {
-		return uid;
+	public String getId() {
+		return id;
 	}
-	public void setUid(String uid) {
-		this.uid = uid;
+	public void setId(String uid) {
+		this.id = uid;
 	}
 	public Timestamp getTs() {
 		return ts;

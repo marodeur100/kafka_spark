@@ -107,7 +107,7 @@
 						<argument>test</argument>
 						<argument>target</argument>
 						<argument>local[*]</argument>
-						<argument>jdbc:postgresql://10.0.20.78:5432/airflow</argument>
+						<argument>jdbc:postgresql://192.168.0.33:30432/airflow</argument>
 						<argument>root</argument>
 						<argument>root</argument>
 					</arguments>

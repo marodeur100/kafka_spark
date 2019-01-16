@@ -1,27 +1,17 @@
 package com.accenture.streaming;
 
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.json_tuple;
+import static org.apache.spark.sql.functions.*;
 
 import java.util.Properties;
 
-import org.apache.http.HttpHost;
-import org.apache.http.util.EntityUtils;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.functions;
 import org.apache.spark.sql.streaming.OutputMode;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
 import org.apache.spark.sql.streaming.Trigger;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.RestClient;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 /**
  * Spark Structured Stream Processing with Apache Kafka <br>
@@ -65,7 +55,6 @@ public class App {
 		Properties props = new Properties();
 		props.setProperty("user",postgresUser);
 		props.setProperty("password",postgresPassword);
-		props.setProperty("ssl","false");
 
 		
 		// Getting the static CSV data from a directory
@@ -76,7 +65,7 @@ public class App {
 		spark.sparkContext().setLogLevel("WARN");
 
 		
-		// now let's read the CSV and associate it with our staticSchema
+		// now let's read the customer table
 		Dataset<Row> staticData = spark.read().jdbc(postgresUrl, "customer_nf", props);
 		
 		// Definition of the Kafka Stream including the mapping of JSON into Java
@@ -87,21 +76,37 @@ public class App {
 				.option("subscribe", topics).load() // subscribe & load
 				.select(json_tuple(col("value").cast("string"), // explode value column as JSON
 						"action", "id", "username", "ts")) // JSON fields we extract
-				.toDF("action", "uid", "username", "ts") // map columns to new names
-																							// (same here in demo)
+				.toDF("action", "id", "username", "ts") // map columns to new names
 				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 
 		// Join kafkaEntries with the static data
-		Dataset<Row> joinedData = kafkaEntries.join(staticData, "uid");
+		Dataset<Row> joinedData = kafkaEntries.join(staticData, "id");
 
 		// Write the real-time data from Kafka to the console
-		StreamingQuery query = kafkaEntries.writeStream() // write a stream
+		StreamingQuery query1 = joinedData.writeStream() // write a stream
 				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
 				.format("console") // to the console
 				.outputMode(OutputMode.Append()) // only write newly matched stuff
 				.start();
 
+		
+		// write to output queue
+		StreamingQuery query2 = joinedData
+				.select(col("id").as("key"), 								// uid is our key for Kafka (not ideal!)
+						to_json(struct(col("action")							// build a struct (grouping) and convert to JSON
+						, col("username"), col("ts")							// ...of our...
+						, col("customeraddress"), col("state"), col("customername")))						// columns
+						.as("value"))														// as value for Kafka
+				.writeStream()																// write this key/value as a stream
+				.trigger(Trigger.ProcessingTime(2000))				// every two seconds 
+				.format("kafka")															// to Kafka :-)
+				.option("kafka.bootstrap.servers", bootstrapServers)
+				.option("topic", targetTopic)
+				.option("checkpointLocation", "checkpoint")  // metadata for checkpointing 
+				.start();
+		
 		// block main thread until done.
-		query.awaitTermination();
+		query1.awaitTermination();
+		query2.awaitTermination();
 	}
 }
