@@ -19,7 +19,7 @@
 		<dependency>
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch-spark-20_2.11</artifactId>
-			<version>6.5.4</version>
+			<version>6.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>postgresql</groupId>

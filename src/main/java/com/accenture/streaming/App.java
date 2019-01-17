@@ -99,17 +99,17 @@ public class App {
 	
 		
 		// write to output queue
-//		StreamingQuery query2 = joinedData.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
-//				to_json(struct(col("id"), col("action") // build a struct (grouping) and convert to JSON
-//						, col("username"), col("ts") // ...of our...
-//						, col("customeraddress"), col("state"), col("customername"))) // columns
-//								.as("value")) // as value for Kafka
-//				.writeStream() // write this key/value as a stream
-//				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
-//				.format("kafka") // to Kafka :-)
-//				.option("kafka.bootstrap.servers", bootstrapServers).option("topic", targetTopic)
-//				.option("checkpointLocation", "checkpoint") // metadata for checkpointing
-//				.start();
+		StreamingQuery query2 = joinedData.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
+				to_json(struct(col("id"), col("action") // build a struct (grouping) and convert to JSON
+						, col("username"), col("ts") // ...of our...
+						, col("customeraddress"), col("state"), col("customername"))) // columns
+								.as("value")) // as value for Kafka
+				.writeStream() // write this key/value as a stream
+				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
+				.format("kafka") // to Kafka :-)
+				.option("kafka.bootstrap.servers", bootstrapServers).option("topic", targetTopic)
+				.option("checkpointLocation", "checkpoint") // metadata for checkpointing
+				.start();
 
 		
 		StreamingQuery query3 =joinedData.writeStream()
