@@ -92,20 +92,20 @@ public class App {
 		Dataset<Row> joinedData = kafkaEntries.join(staticData, "id");
 
 		// write out to elastic
-//		StreamingQuery query3 =joinedData.writeStream()
-//				  .outputMode("append")
-//				  .format("org.elasticsearch.spark.sql")
-//				//  .option("es.mapping.id", "id")
-//				  .option("checkpointLocation", "path-to-checkpointing")
-//				  .start("customer_transaction/json");
+		StreamingQuery query3 =joinedData.writeStream()
+				  .outputMode("append")
+				  .format("org.elasticsearch.spark.sql")
+				//  .option("es.mapping.id", "id")
+				  .option("checkpointLocation", "path-to-checkpointing")
+				  .start("customer_transaction/json");
 		
 		// Write the real-time data from Kafka to the console
-//		StreamingQuery query1 = kafkaEntries.writeStream() // write a stream
-//				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
-//				.format("console") // to the console
-//				.outputMode(OutputMode.Append()) // only write newly matched stuff
-//				.start();
-//	
+		StreamingQuery query1 = kafkaEntries.writeStream() // write a stream
+				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
+				.format("console") // to the console
+				.outputMode(OutputMode.Append()) // only write newly matched stuff
+				.start();
+	
 		
 		// write to output queue
 		StreamingQuery query2 = joinedData.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
