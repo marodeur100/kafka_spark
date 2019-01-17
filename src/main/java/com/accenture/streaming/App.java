@@ -67,7 +67,6 @@ public class App {
 		SparkSession spark = SparkSession.builder().appName("Kafka Streaming Example")
 				.config(ConfigurationOptions.ES_NODES, elasticHost).config(ConfigurationOptions.ES_PORT, elasticPort)
 				.config(ConfigurationOptions.ES_INDEX_AUTO_CREATE, "true")
-				.config("failOnDataLoss", "false")
 				.config(SPARK_MASTER, masterAddress).getOrCreate();
 
 		
@@ -82,6 +81,7 @@ public class App {
 		Dataset<UserActivity> kafkaEntries = spark.readStream() // read a stream
 				.format("kafka") // from KAFKA
 				.option("kafka.bootstrap.servers", bootstrapServers) // connection to servers
+				.option("failOnDataLoss", "false")
 				.option("subscribe", topics).load() // subscribe & load
 				.select(json_tuple(col("value").cast("string"), // explode value column as JSON
 						"action", "id", "username", "ts")) // JSON fields we extract
