@@ -67,6 +67,7 @@ public class App {
 		SparkSession spark = SparkSession.builder().appName("Kafka Streaming Example")
 				.config(ConfigurationOptions.ES_NODES, elasticHost).config(ConfigurationOptions.ES_PORT, elasticPort)
 				.config(ConfigurationOptions.ES_INDEX_AUTO_CREATE, "true")
+				.config("failOnDataLoss", "false")
 				.config(SPARK_MASTER, masterAddress).getOrCreate();
 
 		
