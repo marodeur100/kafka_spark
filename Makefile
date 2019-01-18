@@ -1,10 +1,17 @@
-
 build:
+	mvn install
+
+run:
+	POD_NAME="$(shell sudo kubectl get pods -l "name=postgres-airflow" -o jsonpath="{.items[0].metadata.name}")"; sudo kubectl cp create_transaction_table.sql "$$POD_NAME":/
+	POD_NAME="$(shell sudo kubectl get pods -l "name=postgres-airflow" -o jsonpath="{.items[0].metadata.name}")"; sudo kubectl exec -it $$POD_NAME psql airflow < create_transaction_table.sql
+	mvn exec:java
+
+build_spark:
 	sudo docker build \
     --build-arg SPARK_VERSION_KEY=spark-1.6.3-bin-hadoop2.6 \
     -t spark-2.1.0-bin-hadoop2.6 ./spark
 
-run:
+run_spark:
 	sudo kubectl apply -f spark/spark.yaml
 
 get_pods:

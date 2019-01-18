@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXIST customer_transaction (
+CREATE TABLE IF NOT EXISTS customer_transaction (
     id         integer,
     action varchar(100) ,
     username varchar(100),
@@ -8,3 +8,4 @@ CREATE TABLE IF NOT EXIST customer_transaction (
     state varchar(100),
     creation_time   timestamp DEFAULT current_timestamp
 );
+
