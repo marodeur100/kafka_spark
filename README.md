@@ -28,7 +28,7 @@ pip install kafka
 make generate
 ```
 
-## Run
+## Run Spar Stream
 * Open new terminal
 * if needed adjust pom.xml with arguments: kafka_broker:port source_topic target_topic postgreshost db_user db_pwd
 ```shell
