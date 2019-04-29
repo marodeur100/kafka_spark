@@ -2,8 +2,8 @@ build:
 	mvn install
 
 run:
-	POD_NAME="$(shell sudo kubectl get pods -l "name=postgres-airflow" -o jsonpath="{.items[0].metadata.name}")"; sudo kubectl cp create_transaction_table.sql "$$POD_NAME":/
-	POD_NAME="$(shell sudo kubectl get pods -l "name=postgres-airflow" -o jsonpath="{.items[0].metadata.name}")"; sudo kubectl exec -it $$POD_NAME psql airflow < create_transaction_table.sql
+	POD_NAME="$(shell sudo kubectl get pods -l "name=legacy-db" -n stream -o jsonpath="{.items[0].metadata.name}")"; sudo kubectl cp kafka/create_transaction_table.sql "$$POD_NAME":/ -n stream
+	POD_NAME="$(shell sudo kubectl get pods -l "name=legacy-db" -n stream -o jsonpath="{.items[0].metadata.name}")"; sudo kubectl exec -it $$POD_NAME -n stream  psql legacy < create_transaction_table.sql
 	mvn exec:java
 
 build_spark:
@@ -18,7 +18,7 @@ get_pods:
 	sudo kubectl get pods -n stream
 
 generate:
-	python kafka/kafka_producer.py localhost:30092 test
+	./kafka/generate.sh
 
 source_topic:
 	POD_NAME="$(shell sudo kubectl get pods -l "app=kafka" -o jsonpath="{.items[0].metadata.name}" -n stream)"; sudo kubectl exec -it $$POD_NAME -n stream -- bin/kafka-console-consumer.sh --bootstrap-server $$POD_NAME:9092 --topic test --from-beginning

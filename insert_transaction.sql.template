@@ -1,0 +1,2 @@
+insert into customer_transaction values (@userid@, '@action@', '@username@', current_timestamp);
+
