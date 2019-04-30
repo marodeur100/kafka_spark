@@ -110,13 +110,13 @@ public class App {
 		Dataset<Row> joinedData = finalEntries.join(staticData, "id");
 
 		// write out to elastic
-//		StreamingQuery query3 =joinedData.writeStream()
-//				  .outputMode("append")
-//				  .format("org.elasticsearch.spark.sql")
-//				//  .option("es.mapping.id", "id")
-//				  .option("checkpointLocation", "path-to-checkpointing")
-//				  .start("customer_transactions/search");
-//		
+		StreamingQuery query3 =joinedData.writeStream()
+				  .outputMode("append")
+				  .format("org.elasticsearch.spark.sql")
+				//  .option("es.mapping.id", "id")
+				  .option("checkpointLocation", "path-to-checkpointing")
+				  .start("customer_search/search");
+		
 		// Write the real-time data from Kafka to the console
 		StreamingQuery query1 = joinedData.writeStream() // write a stream
 				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
