@@ -104,15 +104,15 @@ public class App {
 						  .add("before", new StructType()).add("after", new StructType()				  
 				  .add("action", DataTypes.StringType)
 				  .add("id", DataTypes.StringType)
-				  .add("username_test", DataTypes.StringType)
+				  .add("username", DataTypes.StringType)
 				  .add("ts", DataTypes.StringType))));
 		
 		Dataset<Row> action_list = kafkaEntries.select(from_json(col("value"), struct));
 		
-		Dataset<UserActivity> finalEntries = action_list
-				.selectExpr("payload.after.action", "payload.after.id", "payloady.after.username", "payload.after.ts") // JSON fields we extract
-				.toDF("action", "id", "username", "ts") // map columns to new names
-				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
+//		Dataset<UserActivity> finalEntries = action_list
+//				.selectExpr("payload.after.action", "payload.after.id", "payloady.after.username", "payload.after.ts") // JSON fields we extract
+//				.toDF("action", "id", "username", "ts") // map columns to new names
+//				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 		
 		
 //		Dataset<UserActivity> kafkaEntries = spark.readStream() // read a stream
@@ -125,19 +125,19 @@ public class App {
 //		.toDF("action", "id", "username", "ts") // map columns to new names
 //		.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 		
-		// Join kafkaEntries with the static data
-		Dataset<Row> joinedData = finalEntries.join(staticData, "id");
-
-		// write out to elastic
-		StreamingQuery query3 =joinedData.writeStream()
-				  .outputMode("append")
-				  .format("org.elasticsearch.spark.sql")
-				//  .option("es.mapping.id", "id")
-				  .option("checkpointLocation", "path-to-checkpointing")
-				  .start("customer_transactions/search");
+//		// Join kafkaEntries with the static data
+//		Dataset<Row> joinedData = finalEntries.join(staticData, "id");
+//
+//		// write out to elastic
+//		StreamingQuery query3 =joinedData.writeStream()
+//				  .outputMode("append")
+//				  .format("org.elasticsearch.spark.sql")
+//				//  .option("es.mapping.id", "id")
+//				  .option("checkpointLocation", "path-to-checkpointing")
+//				  .start("customer_transactions/search");
 		
 		// Write the real-time data from Kafka to the console
-		StreamingQuery query1 = finalEntries.writeStream() // write a stream
+		StreamingQuery query1 = action_list.writeStream() // write a stream
 				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
 				.format("console") // to the console
 				.outputMode(OutputMode.Append()) // only write newly matched stuff
@@ -145,22 +145,22 @@ public class App {
 	
 		
 		// write to output queue
-		StreamingQuery query2 = finalEntries.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
-				to_json(struct(col("id"), col("action") // build a struct (grouping) and convert to JSON
-						, col("username"), col("ts") // ...of our...
-						, col("customeraddress"), col("state"), col("customername"))) // columns
-								.as("value")) // as value for Kafka
-				.writeStream() // write this key/value as a stream
-				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
-				.format("kafka") // to Kafka :-)
-				.option("kafka.bootstrap.servers", bootstrapServers).option("topic", targetTopic)
-				.option("checkpointLocation", "checkpoint") // metadata for checkpointing
-				.start();
+//		StreamingQuery query2 = finalEntries.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
+//				to_json(struct(col("id"), col("action") // build a struct (grouping) and convert to JSON
+//						, col("username"), col("ts") // ...of our...
+//						, col("customeraddress"), col("state"), col("customername"))) // columns
+//								.as("value")) // as value for Kafka
+//				.writeStream() // write this key/value as a stream
+//				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
+//				.format("kafka") // to Kafka :-)
+//				.option("kafka.bootstrap.servers", bootstrapServers).option("topic", targetTopic)
+//				.option("checkpointLocation", "checkpoint") // metadata for checkpointing
+//				.start();
 
 		
 		// block main thread until done.
 		//query1.awaitTermination();
-		query2.awaitTermination();
+		query1.awaitTermination();
 		//query3.awaitTermination();
 	}
 }
