@@ -137,7 +137,7 @@ public class App {
 //				  .start("customer_transactions/search");
 		
 		// Write the real-time data from Kafka to the console
-		StreamingQuery query1 = action_list.writeStream() // write a stream
+		StreamingQuery query1 = kafkaEntries.writeStream() // write a stream
 				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
 				.format("console") // to the console
 				.outputMode(OutputMode.Append()) // only write newly matched stuff
