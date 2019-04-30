@@ -110,10 +110,10 @@ public class App {
 		
 		Dataset<Row> action_list = kafkaEntries.select(from_json(col("value"), struct));
 		
-//		Dataset<UserActivity> finalEntries = action_list
-//				.selectExpr("payload.after.action", "payload.after.id", "payloady.after.username", "payload.after.ts") // JSON fields we extract
-//				.toDF("action", "id", "username", "ts") // map columns to new names
-//				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
+		Dataset<UserActivity> finalEntries = action_list
+				.selectExpr("payload.after.action", "payload.after.id", "payloady.after.username", "payload.after.ts") // JSON fields we extract
+				.toDF("action", "id", "username", "ts") // map columns to new names
+				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 		
 		
 //		Dataset<UserActivity> kafkaEntries = spark.readStream() // read a stream
@@ -138,7 +138,7 @@ public class App {
 //				  .start("customer_transactions/search");
 		
 		// Write the real-time data from Kafka to the console
-		StreamingQuery query1 = action_list.writeStream() // write a stream
+		StreamingQuery query1 = finalEntries.writeStream() // write a stream
 				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
 				.format("console") // to the console
 				.outputMode(OutputMode.Append()) // only write newly matched stuff
