@@ -110,15 +110,15 @@ public class App {
 		Dataset<Row> joinedData = finalEntries.join(staticData, "id");
 
 		// write out to elastic
-		StreamingQuery query3 =joinedData.writeStream()
-				  .outputMode("append")
-				  .format("org.elasticsearch.spark.sql")
-				//  .option("es.mapping.id", "id")
-				  .option("checkpointLocation", "path-to-checkpointing")
-				  .start("customer_transactions/search");
-		
+//		StreamingQuery query3 =joinedData.writeStream()
+//				  .outputMode("append")
+//				  .format("org.elasticsearch.spark.sql")
+//				//  .option("es.mapping.id", "id")
+//				  .option("checkpointLocation", "path-to-checkpointing")
+//				  .start("customer_transactions/search");
+//		
 		// Write the real-time data from Kafka to the console
-		StreamingQuery query1 = finalEntries.writeStream() // write a stream
+		StreamingQuery query1 = joinedData.writeStream() // write a stream
 				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
 				.format("console") // to the console
 				.outputMode(OutputMode.Append()) // only write newly matched stuff
@@ -126,17 +126,17 @@ public class App {
 	
 		
 		// write to output queue
-		StreamingQuery query2 = finalEntries.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
-				to_json(struct(col("id"), col("action") // build a struct (grouping) and convert to JSON
-						, col("username"), col("ts") // ...of our...
-						, col("customeraddress"), col("state"), col("customername"))) // columns
-								.as("value")) // as value for Kafka
-				.writeStream() // write this key/value as a stream
-				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
-				.format("kafka") // to Kafka :-)
-				.option("kafka.bootstrap.servers", bootstrapServers).option("topic", targetTopic)
-				.option("checkpointLocation", "checkpoint") // metadata for checkpointing
-				.start();
+//		StreamingQuery query2 = finalEntries.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
+//				to_json(struct(col("id"), col("action") // build a struct (grouping) and convert to JSON
+//						, col("username"), col("ts") // ...of our...
+//						, col("customeraddress"), col("state"), col("customername"))) // columns
+//								.as("value")) // as value for Kafka
+//				.writeStream() // write this key/value as a stream
+//				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
+//				.format("kafka") // to Kafka :-)
+//				.option("kafka.bootstrap.servers", bootstrapServers).option("topic", targetTopic)
+//				.option("checkpointLocation", "checkpoint") // metadata for checkpointing
+//				.start();
 		
 		// block main thread until done.
 		//query1.awaitTermination();
