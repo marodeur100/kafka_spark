@@ -96,7 +96,7 @@ public class App {
 				.option("kafka.bootstrap.servers", bootstrapServers) // connection to servers
 				.option("failOnDataLoss", "false")
 				.option("subscribe", topics).load() // subscribe & load
-				.selectExpr("CAST(value.payload.after AS STRING)");
+				.selectExpr("CAST(value AS STRING)");
 
 		StructType struct = new StructType()
 				  .add("schema", new StructType())
@@ -104,7 +104,7 @@ public class App {
 						  .add("before", new StructType()).add("after", new StructType()				  
 				  .add("action", DataTypes.StringType)
 				  .add("id", DataTypes.StringType)
-				  .add("username", DataTypes.StringType)
+				  .add("username_test", DataTypes.StringType)
 				  .add("ts", DataTypes.StringType))));
 		
 		Dataset<Row> action_list = kafkaEntries.select(from_json(col("value"), struct));
