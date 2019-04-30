@@ -108,7 +108,6 @@ public class App {
 								  .add("username", DataTypes.StringType)
 								  .add("ts", DataTypes.StringType)));
 		
-		
 		Dataset<Row> action_list = kafkaEntries.select(from_json(col("value"), struct));
 		
 //		Dataset<UserActivity> finalEntries = action_list
