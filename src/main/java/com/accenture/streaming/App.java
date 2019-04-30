@@ -85,7 +85,6 @@ public class App {
 				.selectExpr("value.payload.after.action", "value.payload.after.id", "value.payloady.after.username", "value.payload.after.ts") // JSON fields we extract
 				.toDF("action", "id", "username", "ts") // map columns to new names
 				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
-
 		
 //		Dataset<UserActivity> kafkaEntries = spark.readStream() // read a stream
 //		.format("kafka") // from KAFKA
