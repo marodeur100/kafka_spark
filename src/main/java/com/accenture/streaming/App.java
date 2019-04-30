@@ -63,7 +63,7 @@ public class App {
 		props.setProperty("user", postgresUser);
 		props.setProperty("password", postgresPassword);
 
-		// Getting the static CSV data from a directory
+		// Open Spark Session
 		SparkSession spark = SparkSession.builder().appName("Kafka Streaming Example")
 				.config(ConfigurationOptions.ES_NODES, elasticHost).config(ConfigurationOptions.ES_PORT, elasticPort)
 				.config(ConfigurationOptions.ES_INDEX_AUTO_CREATE, "true")
@@ -97,7 +97,7 @@ public class App {
 				  .format("org.elasticsearch.spark.sql")
 				//  .option("es.mapping.id", "id")
 				  .option("checkpointLocation", "path-to-checkpointing")
-				  .start("customer_transaction/json");
+				  .start("customer_transactions/search");
 		
 		// Write the real-time data from Kafka to the console
 		StreamingQuery query1 = kafkaEntries.writeStream() // write a stream

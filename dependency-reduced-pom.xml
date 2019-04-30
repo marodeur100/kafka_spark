@@ -64,8 +64,8 @@
           <mainClass>com.accenture.streaming.App</mainClass>
           <arguments>
             <argument>localhost:30092</argument>
-            <argument>test</argument>
-            <argument>target</argument>
+            <argument>customer_transaction</argument>
+            <argument>joined_customer_transactions</argument>
             <argument>local[*]</argument>
             <argument>jdbc:postgresql://localhost:30432/airflow</argument>
             <argument>root</argument>
