@@ -1,7 +1,6 @@
 package com.accenture.streaming;
 
 import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.json_tuple;
 import static org.apache.spark.sql.functions.struct;
 import static org.apache.spark.sql.functions.to_json;
 
@@ -83,11 +82,21 @@ public class App {
 				.option("kafka.bootstrap.servers", bootstrapServers) // connection to servers
 				.option("failOnDataLoss", "false")
 				.option("subscribe", topics).load() // subscribe & load
-				.select(json_tuple(col("value").cast("string"), // explode value column as JSON
-						"action", "id", "username", "ts")) // JSON fields we extract
+				.selectExpr("payload.after.action", "payload.after.id", "payloady.after.username", "payload.after.ts") // JSON fields we extract
 				.toDF("action", "id", "username", "ts") // map columns to new names
 				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 
+		
+//		Dataset<UserActivity> kafkaEntries = spark.readStream() // read a stream
+//		.format("kafka") // from KAFKA
+//		.option("kafka.bootstrap.servers", bootstrapServers) // connection to servers
+//		.option("failOnDataLoss", "false")
+//		.option("subscribe", topics).load() // subscribe & load
+//		.select(json_tuple(col("value").cast("string"), // explode value column as JSON
+//				"action", "id", "username", "ts")) // JSON fields we extract
+//		.toDF("action", "id", "username", "ts") // map columns to new names
+//		.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
+		
 		// Join kafkaEntries with the static data
 		Dataset<Row> joinedData = kafkaEntries.join(staticData, "id");
 
