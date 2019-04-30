@@ -115,7 +115,6 @@ public class App {
 				.toDF("action", "id", "username", "ts") // map columns to new names
 				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 		
-		
 //		Dataset<UserActivity> kafkaEntries = spark.readStream() // read a stream
 //		.format("kafka") // from KAFKA
 //		.option("kafka.bootstrap.servers", bootstrapServers) // connection to servers
