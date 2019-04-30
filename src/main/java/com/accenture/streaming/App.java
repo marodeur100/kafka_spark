@@ -100,12 +100,13 @@ public class App {
 
 		StructType struct = new StructType()
 				  .add("schema", new StructType())
-				  .add("value", new StructType().add("payload", new StructType()
-						  .add("before", new StructType()).add("after", new StructType()				  
-				  .add("action", DataTypes.StringType)
-				  .add("id", DataTypes.StringType)
-				  .add("username", DataTypes.StringType)
-				  .add("ts", DataTypes.StringType))));
+				  .add("payload", new StructType()
+						  .add("before", new StructType())
+						  .add("after", new StructType()				  
+								  .add("action", DataTypes.StringType)
+								  .add("id", DataTypes.StringType)
+								  .add("username", DataTypes.StringType)
+								  .add("ts", DataTypes.StringType)));
 		
 		Dataset<Row> action_list = kafkaEntries.select(from_json(col("value"), struct));
 		
