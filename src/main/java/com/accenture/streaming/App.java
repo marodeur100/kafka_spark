@@ -99,20 +99,15 @@ public class App {
 				.selectExpr("CAST(value AS STRING)");
 
 		StructType struct = new StructType()
-				  .add("value", new StructType().add("payload", new StructType().add("after", new StructType()				  
+				  .add("schema", new StructType())
+				  .add("value", new StructType().add("payload", new StructType()
+						  .add("before", new StructType()).add("after", new StructType()				  
 				  .add("action", DataTypes.StringType)
 				  .add("id", DataTypes.StringType)
 				  .add("username", DataTypes.StringType)
 				  .add("ts", DataTypes.StringType))));
 		
 		Dataset<Row> action_list = kafkaEntries.select(from_json(col("value"), struct));
-		
-		// Write the real-time data from Kafka to the console
-				StreamingQuery query1 = action_list.writeStream() // write a stream
-						.trigger(Trigger.ProcessingTime(2000)) // every two seconds
-						.format("console") // to the console
-						.outputMode(OutputMode.Append()) // only write newly matched stuff
-						.start();
 		
 		Dataset<UserActivity> finalEntries = action_list
 				.selectExpr("payload.after.action", "payload.after.id", "payloady.after.username", "payload.after.ts") // JSON fields we extract
@@ -131,7 +126,7 @@ public class App {
 //		.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 		
 		// Join kafkaEntries with the static data
-		Dataset<Row> joinedData = kafkaEntries.join(staticData, "id");
+		Dataset<Row> joinedData = finalEntries.join(staticData, "id");
 
 		// write out to elastic
 		StreamingQuery query3 =joinedData.writeStream()
@@ -142,15 +137,15 @@ public class App {
 				  .start("customer_transactions/search");
 		
 		// Write the real-time data from Kafka to the console
-//		StreamingQuery query1 = kafkaEntries.writeStream() // write a stream
-//				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
-//				.format("console") // to the console
-//				.outputMode(OutputMode.Append()) // only write newly matched stuff
-//				.start();
+		StreamingQuery query1 = finalEntries.writeStream() // write a stream
+				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
+				.format("console") // to the console
+				.outputMode(OutputMode.Append()) // only write newly matched stuff
+				.start();
 	
 		
 		// write to output queue
-		StreamingQuery query2 = joinedData.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
+		StreamingQuery query2 = finalEntries.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
 				to_json(struct(col("id"), col("action") // build a struct (grouping) and convert to JSON
 						, col("username"), col("ts") // ...of our...
 						, col("customeraddress"), col("state"), col("customername"))) // columns
