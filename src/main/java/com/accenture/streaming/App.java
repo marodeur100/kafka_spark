@@ -108,10 +108,10 @@ public class App {
 								  .add("username", DataTypes.StringType)
 								  .add("ts", DataTypes.StringType)));
 		
-		Dataset<Row> action_list = kafkaEntries.select(from_json(col("value"), struct));
+		Dataset<Row> action_list = kafkaEntries.select(from_json(col("value"), struct).as("output"));
 		
 		Dataset<UserActivity> finalEntries = action_list
-				.selectExpr("payload.after.action", "payload.after.id", "payloady.after.username", "payload.after.ts") // JSON fields we extract
+				.selectExpr("output.payload.after.action", "output.payload.after.id", "output.payloady.after.username", "output.payload.after.ts") // JSON fields we extract
 				.toDF("action", "id", "username", "ts") // map columns to new names
 				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 		
