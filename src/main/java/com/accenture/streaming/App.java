@@ -156,7 +156,6 @@ public class App {
 //				.option("kafka.bootstrap.servers", bootstrapServers).option("topic", targetTopic)
 //				.option("checkpointLocation", "checkpoint") // metadata for checkpointing
 //				.start();
-
 		
 		// block main thread until done.
 		//query1.awaitTermination();
