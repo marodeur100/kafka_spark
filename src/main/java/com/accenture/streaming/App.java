@@ -125,6 +125,7 @@ public class App {
 //		.toDF("action", "id", "username", "ts") // map columns to new names
 //		.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 		
+		
 //		// Join kafkaEntries with the static data
 //		Dataset<Row> joinedData = finalEntries.join(staticData, "id");
 //
