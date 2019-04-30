@@ -163,5 +163,8 @@ public class App {
 		//query1.awaitTermination();
 		query1.awaitTermination();
 		//query3.awaitTermination();
+		
+		
+		
 	}
 }
