@@ -34,6 +34,15 @@ public class App {
 	static final String KAFKA_SUBSCRIBE_TYPE = "subscribe";
 	static final String SPARK_MASTER = "spark.master";
 	static final String KAFKA_BOOTSTRAP_SERVERS = "kafka.bootstrap.servers";
+	static final StructType struct = new StructType()
+			  .add("schema", new StructType())
+			  .add("payload", new StructType()
+					  .add("before", new StructType())
+					  .add("after", new StructType()				  
+							  .add("action", DataTypes.StringType)
+							  .add("id", DataTypes.StringType)
+							  .add("username", DataTypes.StringType)
+							  .add("ts", DataTypes.StringType)));
 
 	public static void main(String[] args) throws StreamingQueryException {
 
@@ -78,19 +87,8 @@ public class App {
 
 		// now let's read the customer table
 		Dataset<Row> staticData = spark.read().jdbc(postgresUrl, "customer_nf", props);
-
-		// Definition of the Kafka Stream including the mapping of JSON into Java
-		// Objects
-//		Dataset<UserActivity> kafkaEntries = spark.readStream() // read a stream
-//				.format("kafka") // from KAFKA
-//				.option("kafka.bootstrap.servers", bootstrapServers) // connection to servers
-//				.option("failOnDataLoss", "false")
-//				.option("subscribe", topics).load() // subscribe & load
-//				.selectExpr("value.payload.after.action", "value.payload.after.id", "value.payloady.after.username", "value.payload.after.ts") // JSON fields we extract
-//				.toDF("action", "id", "username", "ts") // map columns to new names
-//				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 		
-		// read value
+		// read kafka stream
 		Dataset<Row> kafkaEntries = spark.readStream() // read a stream
 				.format("kafka") // from KAFKA
 				.option("kafka.bootstrap.servers", bootstrapServers) // connection to servers
@@ -98,44 +96,26 @@ public class App {
 				.option("subscribe", topics).load() // subscribe & load
 				.selectExpr("CAST(value AS STRING)");
 
-		StructType struct = new StructType()
-				  .add("schema", new StructType())
-				  .add("payload", new StructType()
-						  .add("before", new StructType())
-						  .add("after", new StructType()				  
-								  .add("action", DataTypes.StringType)
-								  .add("id", DataTypes.StringType)
-								  .add("username", DataTypes.StringType)
-								  .add("ts", DataTypes.StringType)));
-		
+		// apply schema
 		Dataset<Row> action_list = kafkaEntries.select(from_json(col("value"), struct).as("output"));
 		
+		// filter out values
 		Dataset<UserActivity> finalEntries = action_list
 				.selectExpr("output.payload.after.action", "output.payload.after.id", "output.payload.after.username", "output.payload.after.ts") // JSON fields we extract
 				.toDF("action", "id", "username", "ts") // map columns to new names
 				.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 		
-//		Dataset<UserActivity> kafkaEntries = spark.readStream() // read a stream
-//		.format("kafka") // from KAFKA
-//		.option("kafka.bootstrap.servers", bootstrapServers) // connection to servers
-//		.option("failOnDataLoss", "false")
-//		.option("subscribe", topics).load() // subscribe & load
-//		.select(json_tuple(col("value").cast("string"), // explode value column as JSON
-//				"action", "id", "username", "ts")) // JSON fields we extract
-//		.toDF("action", "id", "username", "ts") // map columns to new names
-//		.as(Encoders.bean(UserActivity.class)); // make a good old JavaBean out of it
 		
-		
-//		// Join kafkaEntries with the static data
-//		Dataset<Row> joinedData = finalEntries.join(staticData, "id");
-//
-//		// write out to elastic
-//		StreamingQuery query3 =joinedData.writeStream()
-//				  .outputMode("append")
-//				  .format("org.elasticsearch.spark.sql")
-//				//  .option("es.mapping.id", "id")
-//				  .option("checkpointLocation", "path-to-checkpointing")
-//				  .start("customer_transactions/search");
+		// Join kafkaEntries with the static data
+		Dataset<Row> joinedData = finalEntries.join(staticData, "id");
+
+		// write out to elastic
+		StreamingQuery query3 =joinedData.writeStream()
+				  .outputMode("append")
+				  .format("org.elasticsearch.spark.sql")
+				//  .option("es.mapping.id", "id")
+				  .option("checkpointLocation", "path-to-checkpointing")
+				  .start("customer_transactions/search");
 		
 		// Write the real-time data from Kafka to the console
 		StreamingQuery query1 = finalEntries.writeStream() // write a stream
@@ -146,17 +126,17 @@ public class App {
 	
 		
 		// write to output queue
-//		StreamingQuery query2 = finalEntries.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
-//				to_json(struct(col("id"), col("action") // build a struct (grouping) and convert to JSON
-//						, col("username"), col("ts") // ...of our...
-//						, col("customeraddress"), col("state"), col("customername"))) // columns
-//								.as("value")) // as value for Kafka
-//				.writeStream() // write this key/value as a stream
-//				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
-//				.format("kafka") // to Kafka :-)
-//				.option("kafka.bootstrap.servers", bootstrapServers).option("topic", targetTopic)
-//				.option("checkpointLocation", "checkpoint") // metadata for checkpointing
-//				.start();
+		StreamingQuery query2 = finalEntries.select(col("id").as("key"), // uid is our key for Kafka (not ideal!)
+				to_json(struct(col("id"), col("action") // build a struct (grouping) and convert to JSON
+						, col("username"), col("ts") // ...of our...
+						, col("customeraddress"), col("state"), col("customername"))) // columns
+								.as("value")) // as value for Kafka
+				.writeStream() // write this key/value as a stream
+				.trigger(Trigger.ProcessingTime(2000)) // every two seconds
+				.format("kafka") // to Kafka :-)
+				.option("kafka.bootstrap.servers", bootstrapServers).option("topic", targetTopic)
+				.option("checkpointLocation", "checkpoint") // metadata for checkpointing
+				.start();
 		
 		// block main thread until done.
 		//query1.awaitTermination();
